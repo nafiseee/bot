@@ -294,7 +294,7 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
 #     print(f"=======================")
 #     print(message.text)
 #
-#     await state.set_state(Form.b_id)
+#     await state.set_state(Form.b_id)d
 @questionnaire_router.message(F.text,Form.b_id)
 async def start_questionnaire_process(message: Message, state: FSMContext):
     print(f"======================={message.text}")
