@@ -14,7 +14,7 @@ def capacity_validate(text):
     return bool(re.match(pattern, text))
 def model_validate(text):
     return text in ["Шаркусь монстр 15","Шаркусь монстр 20","Мингто монстр 20","Монстр про","Крути 15",
-                    "Kruti 29","Kruti 27.5","Forward 29","Forward 27.5,"
+                    "Kruti 29","Kruti 27.5","Forward 29","Forward 27.5",
                     "Желтый","Лонг"]
 def id_validate(text):
     return act_validate(text)

@@ -81,8 +81,8 @@ admins = [int(admin_id) for admin_id in config('ADMINS').split(',')]
 #             print(f"❌ Ошибка подключения: {e}")
 #             return False
 
-# async_client = AsyncIOMotorClient('mongodb://adminuser:adminpassword@mongodb:27017/')
-async_client = AsyncIOMotorClient('mongodb://localhost:27017/')
+async_client = AsyncIOMotorClient('mongodb://adminuser:adminpassword@mongodb:27017/')
+#async_client = AsyncIOMotorClient('mongodb://localhost:27017/')
 print('подключение к монго')
 async_db = async_client.telegram_bot
 electro = async_db.electro
@@ -102,9 +102,11 @@ print(os.getenv('REDIS_PASSWORD'))
 # )
 
 bot = Bot(token=config('TOKEN'), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-# dp = Dispatcher(storage=RedisStorage.from_url("redis://redis:6379/0"))
 from datetime import timedelta
-dp = Dispatcher(storage=RedisStorage.from_url("redis://127.0.0.1:6379/0",
+dp = Dispatcher(storage=RedisStorage.from_url("redis://redis:6379/0",state_ttl=timedelta(hours=24),  # 24 часа для состояния
+#                                               data_ttl=timedelta(hours=24) )))
+
+#dp = Dispatcher(storage=RedisStorage.from_url("redis://127.0.0.1:6379/0",
                                               state_ttl=timedelta(hours=24),  # 24 часа для состояния
                                               data_ttl=timedelta(hours=24) ))
 print('подключение к редис')
