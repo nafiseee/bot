@@ -1,5 +1,6 @@
 client_work_keys = ['work_type', 'full_name', 'phone_number', 'act_id', 'b_model', 'b_id', 'iot_id','act_akb_id','akb_id','capacity']
 client_work = ['', '', 'Номер телефона: ', 'Акт №', 'Модель велосипеда: ', 'Номер велосипеда: ', 'IoT: ','Акт №:','Акб №:','Емкость:']
+from db_handler.db_class import get_users_colors
 # async def info(state):
 #     data = await state.get_data()
 #     s = f"<b>Мастер:</b> {data['employer_name']} | {data['start_time']}\n\n"
@@ -48,10 +49,19 @@ client_work = ['', '', 'Номер телефона: ', 'Акт №', 'Моде�
 #             print(data['spares_types'])
 #     s+=f"\n<b>Норма часы:</b> {round(sum(data['norm_time']),1)}👺"
 akb_keys = ['act_akb_id','akb_id','capacity']
+
+
 async def info(state):
+    colors = await get_users_colors()
+    a = {}
+    for i in colors:
+        if 'color' in i:
+            a[i['tg_id']] = i['color']
+
     data = await state.get_data()
     s = f"<b>Мастер:</b> {data['employer_name']} | {data['start_time']}\n\n"
-
+    if data['user_id'] in a:
+        s+=a[data['user_id']]*10+"\n"
     for index, work_key in enumerate(client_work_keys):
         if work_key in data:
             work_label = client_work[index]

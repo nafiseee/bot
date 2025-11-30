@@ -33,6 +33,17 @@ def m_or_e_kb():
         input_field_placeholder="Воспользуйтесь меню:"
     )
     return keyboard
+def akt_zero():
+    kb_list = [
+        [KeyboardButton(text="Акт отсутствует")],
+    ]
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=kb_list,
+        resize_keyboard=True,
+        one_time_keyboard=True,
+        input_field_placeholder="Воспользуйтесь меню:"
+    )
+    return keyboard
 def works_edit_kb(akb = False):
 
     if akb:
@@ -106,7 +117,9 @@ def b_models(a):
         [KeyboardButton(text="Шаркусь монстр 20")],
         [KeyboardButton(text="Мингто монстр 20")],
         [KeyboardButton(text="Монстр про")],
-        [KeyboardButton(text="Крути 15")]]
+        [KeyboardButton(text="Крути 15")],
+    [KeyboardButton(text="Желтый")],
+    [KeyboardButton(text="Лонг")],]
     kb_list2 = [[KeyboardButton(text="Forward 27.5")],
                 [KeyboardButton(text="Forward 29")],
                 [KeyboardButton(text="Kruti 27.5")],

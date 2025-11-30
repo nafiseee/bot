@@ -3,7 +3,7 @@ from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import FSInputFile,ReplyKeyboardRemove,CallbackQuery
-from keyboards.all_kb import main_kb,b_models,works_edit_kb,m_or_e_kb,edit_work,iots_pred,cancel,norm_times_menu
+from keyboards.all_kb import main_kb,b_models,works_edit_kb,m_or_e_kb,edit_work,iots_pred,cancel,norm_times_menu,akt_zero
 from aiogram.utils.chat_action import ChatActionSender
 from validators.validators import name_validate,phone_validate,act_validate,model_validate,id_validate,iot_validate, bycycle_type_validate
 from datetime import timedelta
@@ -198,7 +198,7 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
     async with ChatActionSender.typing(bot=bot, chat_id=message.chat.id):
         await state.update_data(start_time = (timedelta(hours=3)+message.date).strftime("%Y-%m-%d %H:%M:%S"))
         await state.update_data(employer=message.from_user.full_name)
-        await message.answer('Введи номер акта: ', reply_markup=ReplyKeyboardRemove())
+        await message.answer('Введи номер акта: ', reply_markup=akt_zero())
     await state.set_state(Form.act_id)
 @questionnaire_router.message(F.text=='🔧 Клиентский ремонт',Form.client_start)
 async def start_questionnaire_process(message: Message, state: FSMContext):
@@ -210,7 +210,7 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
         await state.update_data(start_time=(message.date+timedelta(hours=3)).strftime("%Y-%m-%d %H:%M:%S"))
         await state.update_data(employer=message.from_user.full_name)
         await state.update_data(message_id = message.from_user.id+1)
-        await message.answer('Введи ФИО:', reply_markup=ReplyKeyboardRemove())
+        await message.answer('Введи Фамилию Имя:', reply_markup=ReplyKeyboardRemove())
     await state.set_state(Form.full_name)
 @questionnaire_router.message(F.text=='🔋 Аккумулятор',Form.client_start)
 async def start_questionnaire_process(message: Message, state: FSMContext):
@@ -218,7 +218,7 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
     print("Акб")
     await state.clear()
     await state.set_state(Form.act_akb_id)
-    await message.answer("Номер акта:", reply_markup=ReplyKeyboardRemove())
+    await message.answer("Номер акта:", reply_markup=akt_zero())
 @questionnaire_router.message(F.text == '🎵 Музыка', Form.client_start)
 async def start_questionnaire_process(message: Message, state: FSMContext):
     print(f"======================={message.text}")
@@ -237,7 +237,7 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
     print(f"======================={message.text}")
     print("Имя")
     if not name_validate(message.text):
-        await message.reply("Пожалуйста, введите корректное ФИО в формате: Фамилия Имя")
+        await message.reply("Пожалуйста, введите в формате: Фамилия Имя")
         return
     await state.update_data(full_name=message.text, user_id=message.from_user.id)
     async with ChatActionSender.typing(bot=bot, chat_id=message.chat.id):
@@ -248,7 +248,7 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
     print(f"======================={message.text}")
     print("Номер телеофна")
     if not phone_validate(message.text):
-        await message.reply("Пожалуйста введите номер в формате 8XXXXXXXXXX")
+        await message.reply("Пожалуйста введите корректный номер")
         return
     await state.update_data(phone_number=message.text, user_id=message.from_user.id)
     async with ChatActionSender.typing(bot=bot, chat_id=message.chat.id):

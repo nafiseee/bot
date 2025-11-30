@@ -47,7 +47,7 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
 
     # Безопасное удаление по индексу
     if '|' in message.text:
-        spare_number = int(message.text.split('|')[0].strip()) - 1
+        spare_number = int(message.text.split('|')[0].strip())
         print(spare_number)
         removed_spare = spares_list.pop(spare_number-1)
         await state.update_data(spares=spares_list)
