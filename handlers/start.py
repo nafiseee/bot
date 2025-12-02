@@ -12,7 +12,7 @@ from utils.info import info
 from db_handler import db_class
 from db_handler.db_class import get_my_time
 from create_bot import Form
-from db_handler.db_class import check_sub,add_user,get_user_name,find_remont,get_pred_iot,delete_remont
+from db_handler.db_class import check_sub,add_user,get_user_name,find_remont,get_pred_iot,delete_remont,get_act_ids
 from aiogram.exceptions import TelegramBadRequest
 from create_bot import bot
 
@@ -260,6 +260,11 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
     print("номер акта")
     if not act_validate(message.text):
         await message.reply("Некоректный номер акта. Попробуйте еще раз")
+        return
+    q = await get_act_ids()
+    print(q)
+    if message.text in q and q not in ['Акт отсутствует','0']:
+        await message.reply("Ремонт с этим актом уже существует(")
         return
     await state.update_data(act_id=message.text, user_id=message.from_user.id)
     async with ChatActionSender.typing(bot=bot, chat_id=message.chat.id):

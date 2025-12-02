@@ -68,7 +68,7 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
         await message.answer("Использованные запчасти:", reply_markup=main_kb(message.from_user.id))
         document = FSInputFile('temporary_folder/lost_spares1.xlsx')
         await bot.send_document(message.chat.id, document)
-        document = FSInputFile('temporary_folder/lost_pares2.xlsx')
+        document = FSInputFile('temporary_folder/lost_spares2.xlsx')
         await bot.send_document(message.chat.id, document)
     await state.set_state(Form.client_start)
 @admin_router.message(F.text == 'Все работы',Form.admin)

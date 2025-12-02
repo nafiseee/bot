@@ -194,10 +194,34 @@ async def get_my_time(id,start_str = None, end_str = None,q=False):
             return f"Всего: {str(round(e_sum+m_sum+akb_sum,1))} за сегодня.\n"
 async def get_pred_iot(data):
     if data['m_or_e'] == 'Электро':
-        a = [i for i in await electro.find({"b_id": data['b_id'],'b_model':data['b_model']}).to_list()]
+        pipeline = [
+            {
+                "$match": {
+                    "b_id": data['b_id'],
+                    'b_model': data['b_model']
+                }
+            },
+            {
+                "$sort": {"start_time": -1}  # Сортируем по убыванию времени
+            },
+            {
+                "$group": {
+                    "_id": "$iot_id",  # Группируем по iot_id
+                    "latest_date": {"$first": "$start_time"}  # Берем первую (самую позднюю) дату
+                }
+            },
+            {
+                "$sort": {"latest_date": -1}  # Опционально: сортируем результат
+            }
+        ]
+
+        result = await electro.aggregate(pipeline).to_list()
+
         iots = []
-        for i in a:
-            iots.append(f"iot:|{i['iot_id']}|date:{i['start_time'].split(' ')[0]}")
+        for item in result:
+            date_str = item['latest_date'].split(' ')[0]
+            iots.append(f"iot:|{item['_id']}|date:{date_str}")
+
         return iots
 
 async def get_times_all(start_str=None,end_str=None):
@@ -227,6 +251,10 @@ async def get_times_all(start_str=None,end_str=None):
 
 
     return text
+
+async def get_act_ids():
+    a = [dict(i)['act_id'] for i in await electro.find().to_list()]
+    return a
 
 async def get_lost_spares():
     all_spares = []

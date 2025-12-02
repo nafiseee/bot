@@ -323,3 +323,13 @@ def norm_times_menu():
         input_field_placeholder="Воспользуйтесь меню:"
     )
     return keyboard
+def spare_count_kb():
+    kb_list = [
+        [KeyboardButton(text="1"),KeyboardButton(text="2")]]
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=kb_list,
+        resize_keyboard=True,
+        one_time_keyboard=True,
+        input_field_placeholder="Воспользуйтесь меню:"
+    )
+    return keyboard

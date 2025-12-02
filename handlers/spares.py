@@ -1,6 +1,6 @@
 from aiogram import Router, F
 from aiogram.types import Message
-from keyboards.all_kb import works_edit_kb,add_spares,spares_list_for_work,return_spares_group,return_spares,deleting_spares
+from keyboards.all_kb import works_edit_kb,add_spares,spares_list_for_work,return_spares_group,return_spares,deleting_spares,spare_count_kb
 from aiogram.fsm.context import FSMContext
 from utils.info import info
 from utils.dataframes import df,df_spares
@@ -160,8 +160,8 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
         current_spares.append(spare_to_add)
         await state.update_data(spares=current_spares)
 
-        await message.answer(await info(state), reply_markup=works_edit_kb())
-        await state.set_state(Form.next_menu)
+        await state.set_state(Form.set_spare_count)
+        await message.answer("Укажи количество:", reply_markup=spare_count_kb())
     else:
         await message.answer("Запчасть не найдена, попробуйте снова",
                              reply_markup=spares_list_for_work())
@@ -256,9 +256,31 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
         current_spares = data.get('spares', [])
         current_spares.append(spare_to_add)
         await state.update_data(spares=current_spares)
+        await state.set_state(Form.set_spare_count)
+        await message.answer("Укажи количество:", reply_markup=spare_count_kb())
 
-        await message.answer(await info(state), reply_markup=works_edit_kb())
-        await state.set_state(Form.next_menu)
+        #
+        # await message.answer(await info(state), reply_markup=works_edit_kb())
+        # await state.set_state(Form.next_menu)
     else:
         await message.answer("Запчасти:", reply_markup=add_spares(spares_variant))
         await state.set_state(Form.add_spare)
+
+
+@spares_router.message(F.text, Form.set_spare_count)
+async def start_questionnaire_process(message: Message, state: FSMContext):
+    if message.text in ['1','2']:
+        if message.text == '2':
+            data = await state.get_data()
+            current_spares = data.get('spares', [])
+            current_spares.append(current_spares[-1])
+            await state.update_data(spares=current_spares)
+            await message.answer(await info(state), reply_markup=works_edit_kb())
+            await state.set_state(Form.next_menu)
+        else:
+            await message.answer(await info(state), reply_markup=works_edit_kb())
+            await state.set_state(Form.next_menu)
+    else:
+        await state.set_state(Form.set_spare_count)
+        await message.answer("Укажи количество:", reply_markup=spare_count_kb())
+    print(await state.get_data())

@@ -1,6 +1,7 @@
 client_work_keys = ['work_type', 'full_name', 'phone_number', 'act_id', 'b_model', 'b_id', 'iot_id','act_akb_id','akb_id','capacity']
 client_work = ['', '', 'Номер телефона: ', 'Акт №', 'Модель велосипеда: ', 'Номер велосипеда: ', 'IoT: ','Акт №:','Акб №:','Емкость:']
 from db_handler.db_class import get_users_colors
+import textwrap
 # async def info(state):
 #     data = await state.get_data()
 #     s = f"<b>Мастер:</b> {data['employer_name']} | {data['start_time']}\n\n"
@@ -102,4 +103,4 @@ async def info_all_times(a):
     for i in a:
         s+=f"{i}: {a[i]}\n"
     print(s)
-    return s
+    return textwrap.fill(s, width=5)

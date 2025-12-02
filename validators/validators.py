@@ -17,7 +17,7 @@ def model_validate(text):
                     "Kruti 29","Kruti 27.5","Forward 29","Forward 27.5",
                     "Желтый","Лонг"]
 def id_validate(text):
-    return act_validate(text)
+    return act_validate(text) and text[0]!='0'
 def iot_validate(text):
     return act_validate(text)
 def bycycle_type_validate(text):
