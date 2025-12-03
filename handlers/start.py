@@ -178,8 +178,6 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
             print('пишут не в бота. поэтому отмена.', message.chat.id)
     print('хуййй')
 
-@start.message(Command('add_work')) #НАЧАЛО
-async def start_questionnaire_process(message: Message, state: FSMContext):
 
 
 @questionnaire_router.message(F.text,Form.get_name_employer)

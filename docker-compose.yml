@@ -49,7 +49,7 @@ services:
       - REDIS_PORT=6379
       - TZ=Europe/Moscow
     volumes:
-      - /etc/localtime:/etc/localtime:rols
+      - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     command: python run_bot.py
     restart: unless-stopped
