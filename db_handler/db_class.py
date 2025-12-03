@@ -44,6 +44,7 @@ async def delete_remont(data):
     if 'akb' in data:
         await akb.delete_one({ "_id": ObjectId(data['_id']) })
 
+
 async def get_users_colors():
     a = [dict(i) for i in await users.find().to_list()]
     print(a)

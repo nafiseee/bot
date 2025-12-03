@@ -8,7 +8,7 @@ def phone_validate(text):
     return bool(re.match(pattern, text))
 def act_validate(text):
     pattern = r'[0-9]+$'
-    return bool(re.match(pattern, text)) or text == 'Акт отсутствует'
+    return bool(re.match(pattern, text))  or text=='Акт отсутствует'
 def capacity_validate(text):
     pattern = r'^[0-9]*\.?[0-9]+$'
     return bool(re.match(pattern, text))

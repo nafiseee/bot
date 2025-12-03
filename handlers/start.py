@@ -177,6 +177,11 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
     else:
             print('пишут не в бота. поэтому отмена.', message.chat.id)
     print('хуййй')
+
+@start.message(Command('add_work')) #НАЧАЛО
+async def start_questionnaire_process(message: Message, state: FSMContext):
+
+
 @questionnaire_router.message(F.text,Form.get_name_employer)
 async def start_questionnaire_process(message: Message, state: FSMContext):
     print("регистрация")
@@ -263,7 +268,7 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
         return
     q = await get_act_ids()
     print(q)
-    if message.text in q and q not in ['Акт отсутствует','0']:
+    if message.text in q and message.text not in ['Акт отсутствует','0']:
         await message.reply("Ремонт с этим актом уже существует(")
         return
     await state.update_data(act_id=message.text, user_id=message.from_user.id)
