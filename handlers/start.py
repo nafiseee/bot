@@ -2,7 +2,7 @@ from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import FSInputFile, ReplyKeyboardRemove, CallbackQuery
+from aiogram.types import FSInputFile, ReplyKeyboardRemove
 from keyboards.all_kb import main_kb, b_models, works_edit_kb, m_or_e_kb, edit_work, iots_pred, cancel, norm_times_menu, akt_zero
 from aiogram.utils.chat_action import ChatActionSender
 from validators.validators import name_validate, phone_validate, act_validate, model_validate, id_validate, iot_validate, bycycle_type_validate
@@ -15,6 +15,7 @@ from create_bot import Form
 from db_handler.db_class import check_sub, add_user, get_user_name, find_remont, get_pred_iot, delete_remont, get_act_ids
 from aiogram.exceptions import TelegramBadRequest
 from create_bot import bot
+from decouple import config
 
 # Импортируем тексты и кнопки
 from texts import *
@@ -118,7 +119,7 @@ from aiogram.filters import StateFilter
 
 @questionnaire_router.message(F.text == BUTTON_SAVE_REPAIR, StateFilter(Form.next_menu, Form.akb_menu))
 async def start_questionnaire_process(message: Message, state: FSMContext):
-    f = {'Электро': 26, 'Механика': 34}
+
     print("Сохранить ремонт next_menu")
     await state.update_data(end_time=(timedelta(hours=3) + message.date).strftime("%Y-%m-%d %H:%M:%S"))
     async with ChatActionSender.typing(bot=bot, chat_id=message.chat.id):
@@ -134,34 +135,47 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
         print(data['end_time'])
         try:
             await bot.edit_message_text(
-                chat_id=-1002979979409,
+                chat_id=config('CHAT_ID'),
                 message_id=int(data['msg_id']),
                 text=await info(state))
         except TelegramBadRequest:
-            bot.delete_message(chat_id=-1002979979409, message_id=int(data['msg_id']))
+            bot.delete_message(chat_id=config('CHAT_ID'), message_id=int(data['msg_id']))
             print('сохраняем ремонт')
             m_or_e = await state.get_data()['m_or_e']
             print(m_or_e, 'fffff f')
             if m_or_e:
-                message = await bot.send_message(-1002979979409, await info(state), reply_to_message_id=f[m_or_e])
+                if m_or_e=='Электро':
+                    message = await bot.send_message(config('CHAT_ID'), await info(state), reply_to_message_id=config('ELECTRO_TOPIC_ID'))
+                else:
+                    message = await bot.send_message(config('CHAT_ID'), await info(state),reply_to_message_id=config('MECHANICAL_TOPIC_ID'))
             else:
-                message = await bot.send_message(-1002979979409, await info(state), reply_to_message_id=30)
+                message = await bot.send_message(config('CHAT_ID'), await info(state), reply_to_message_id=config('AKB_TOPIC_ID'))
             await state.update_data(msg_id=message.message_id)
     else:
         print('сохраняем ремонт')
         if 'm_or_e' in dict(await state.get_data()):
             m_or_e = dict(await state.get_data())['m_or_e']
-            message = await bot.send_message(-1002979979409, await info(state), reply_to_message_id=f[m_or_e])
+            if m_or_e=='Электро':
+                message = await bot.send_message(config('CHAT_ID'), await info(state), reply_to_message_id=config('ELECTRO_TOPIC_ID'))
+            else:
+                message = await bot.send_message(config('CHAT_ID'), await info(state), reply_to_message_id=config('MECHANICAL_TOPIC_ID'))
         else:
-            message = await bot.send_message(-1002979979409, await info(state), reply_to_message_id=30)
+            message = await bot.send_message(config('CHAT_ID'), await info(state), reply_to_message_id=config('AKB_TOPIC_ID'))
         await state.update_data(msg_id=message.message_id)
     await db_class.save_remont(state)
+
+@start.message(Command("get_ids"))
+async def get_ids(message: Message):
+    await message.answer(
+        f"Chat ID: {message.chat.id}\n"
+        f"Topic ID: {message.message_thread_id}"
+    )
 
 @start.message(Command('start'))  # НАЧАЛО
 async def start_questionnaire_process(message: Message, state: FSMContext):
     print(f"======================={message.text}")
     print("старт епта")
-    if message.chat.id != -1002979979409:
+    if message.chat.id != config('CHAT_ID'):
         if await check_sub(message.from_user.id):
             await state.clear()
             async with ChatActionSender.typing(bot=bot, chat_id=message.chat.id):
@@ -177,6 +191,7 @@ async def start_questionnaire_process(message: Message, state: FSMContext):
     else:
         print('пишут не в бота. поэтому отмена.', message.chat.id)
     print('хуййй')
+    print(await state.get_state())
 
 @questionnaire_router.message(F.text, Form.get_name_employer)
 async def start_questionnaire_process(message: Message, state: FSMContext):
