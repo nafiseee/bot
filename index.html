@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Статистика ремонтов</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.8;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .tab {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .tab.active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .recent-repairs {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .repair-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .repair-item:last-child {
+            border-bottom: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+        }
+
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .date-filter input {
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .date-filter button {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Статистика ремонтов</h1>
+            <p id="mechanicName">Загрузка...</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('overview')">Обзор</button>
+            <button class="tab" onclick="showTab('mechanics')">Механики</button>
+            <button class="tab" onclick="showTab('spares')">Запчасти</button>
+            <button class="tab" onclick="showTab('recent')">Последние</button>
+        </div>
+
+        <div class="date-filter">
+            <input type="date" id="startDate">
+            <input type="date" id="endDate">
+            <button onclick="loadStats()">Применить</button>
+        </div>
+
+        <!-- Вкладка Обзор -->
+        <div id="overviewTab" class="tab-content">
+            <div class="stats-grid" id="statsCards"></div>
+
+            <div class="chart-container">
+                <h2 class="chart-title">📈 Ремонты по месяцам</h2>
+                <canvas id="monthlyChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h2 class="chart-title">🔧 Топ работ</h2>
+                <canvas id="worksChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Вкладка Механики -->
+        <div id="mechanicsTab" class="tab-content" style="display: none;">
+            <div class="chart-container">
+                <h2 class="chart-title">🏆 Топ механиков (нормочасы)</h2>
+                <canvas id="mechanicsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Вкладка Запчасти -->
+        <div id="sparesTab" class="tab-content" style="display: none;">
+            <div class="chart-container">
+                <h2 class="chart-title">🔩 Часто используемые запчасти</h2>
+                <canvas id="sparesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Вкладка Последние ремонты -->
+        <div id="recentTab" class="tab-content" style="display: none;">
+            <div class="recent-repairs">
+                <h2>🛠️ Последние ремонты</h2>
+                <div id="recentRepairsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.MainButton.setText("Обновить").show().onClick(loadStats);
+
+        // Текущий пользователь
+        const user = tg.initDataUnsafe.user;
+        document.getElementById('mechanicName').textContent = `Привет, ${user.first_name || 'Механик'}!`;
+
+        let charts = {};
+        const API_BASE_URL = 'http://localhost:8000'; // Замени на продакшн URL
+
+        // Показ вкладок
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').style.display = 'block';
+        }
+
+        // Загрузка статистики
+        async function loadStats() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            try {
+                // Статистика механика
+                let url = `${API_BASE_URL}/api/stats/mechanic/${user.id}`;
+                if (startDate && endDate) {
+                    url += `?start_date=${startDate}&end_date=${endDate}`;
+                }
+
+                const response = await fetch(url);
+                const stats = await response.json();
+
+                renderStatsCards(stats);
+                renderMonthlyChart(stats.by_month);
+                renderWorksChart(stats.top_works);
+
+                // Топ механиков
+                const mechanicsResponse = await fetch(`${API_BASE_URL}/api/stats/top-mechanics?period=month`);
+                const mechanics = await mechanicsResponse.json();
+                renderMechanicsChart(mechanics);
+
+                // Запчасти
+                const sparesResponse = await fetch(`${API_BASE_URL}/api/stats/spares-usage`);
+                const spares = await sparesResponse.json();
+                renderSparesChart(spares);
+
+                // Последние ремонты
+                const recentResponse = await fetch(`${API_BASE_URL}/api/repairs/recent?limit=10`);
+                const recent = await recentResponse.json();
+                renderRecentRepairs(recent);
+
+            } catch (error) {
+                console.error('Ошибка загрузки статистики:', error);
+                tg.showAlert('Ошибка загрузки данных');
+            }
+        }
+
+        // Рендер карточек статистики
+        function renderStatsCards(stats) {
+            const cards = [
+                { title: 'Всего ремонтов', value: stats.total_repairs, icon: '🛠️' },
+                { title: 'Нормочасы', value: stats.total_norm_hours.toFixed(1), icon: '⏱️' },
+                { title: 'Использовано запчастей', value: stats.total_spares, icon: '🔩' },
+                { title: 'Типов работ', value: Object.keys(stats.by_type).length, icon: '📋' }
+            ];
+
+            const html = cards.map(card => `
+                <div class="stat-card">
+                    <h3>${card.icon} ${card.title}</h3>
+                    <div class="value">${card.value}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('statsCards').innerHTML = html;
+        }
+
+        // Рендер графика по месяцам
+        function renderMonthlyChart(monthlyData) {
+            const ctx = document.getElementById('monthlyChart').getContext('2d');
+
+            if (charts.monthly) charts.monthly.destroy();
+
+            const labels = Object.keys(monthlyData).sort();
+            const data = labels.map(label => monthlyData[label]);
+
+            charts.monthly = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Количество ремонтов',
+                        data: data,
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { labels: { color: 'white' } }
+                    },
+                    scales: {
+                        x: { ticks: { color: 'white' } },
+                        y: { ticks: { color: 'white' } }
+                    }
+                }
+            });
+        }
+
+        // Рендер графика топ работ
+        function renderWorksChart(worksData) {
+            const ctx = document.getElementById('worksChart').getContext('2d');
+
+            if (charts.works) charts.works.destroy();
+
+            const labels = Object.keys(worksData);
+            const data = Object.values(worksData);
+
+            charts.works = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Количество',
+                        data: data,
+                        backgroundColor: [
+                            '#667eea', '#764ba2', '#f093fb',
+                            '#f5576c', '#4facfe', '#00f2fe'
+                        ]
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { ticks: { color: 'white' } },
+                        y: { ticks: { color: 'white' } }
+                    }
+                }
+            });
+        }
+
+        // Рендер графика топ механиков
+        function renderMechanicsChart(mechanics) {
+            const ctx = document.getElementById('mechanicsChart').getContext('2d');
+
+            if (charts.mechanics) charts.mechanics.destroy();
+
+            const labels = mechanics.map(m => m.name.split(' ')[0]); // Только имя
+            const data = mechanics.map(m => m.hours);
+
+            charts.mechanics = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Нормочасы',
+                        data: data,
+                        backgroundColor: '#4facfe'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { labels: { color: 'white' } }
+                    },
+                    scales: {
+                        x: { ticks: { color: 'white' } },
+                        y: {
+                            ticks: { color: 'white' },
+                            title: {
+                                display: true,
+                                text: 'Нормочасы',
+                                color: 'white'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Рендер графика запчастей
+        function renderSparesChart(spares) {
+            const ctx = document.getElementById('sparesChart').getContext('2d');
+
+            if (charts.spares) charts.spares.destroy();
+
+            const labels = spares.slice(0, 10).map(s => s.name);
+            const data = spares.slice(0, 10).map(s => s.count);
+
+            charts.spares = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56',
+                            '#4BC0C0', '#9966FF', '#FF9F40',
+                            '#FF6384', '#C9CBCF', '#4BC0C0', '#36A2EB'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: 'white' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Рендер последних ремонтов
+        function renderRecentRepairs(repairs) {
+            const html = repairs.map(repair => `
+                <div class="repair-item">
+                    <div>
+                        <strong>${repair.client}</strong><br>
+                        <small>${repair.bike} • ${new Date(repair.time).toLocaleDateString()}</small>
+                    </div>
+                    <div style="text-align: right;">
+                        <div>${repair.works.length} работ</div>
+                        <small>${repair.norm_hours} нормочасов</small>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('recentRepairsList').innerHTML = html;
+        }
+
+        // Установка дат по умолчанию (последние 30 дней)
+        function setDefaultDates() {
+            const end = new Date();
+            const start = new Date();
+            start.setDate(start.getDate() - 30);
+
+            document.getElementById('startDate').value = start.toISOString().split('T')[0];
+            document.getElementById('endDate').value = end.toISOString().split('T')[0];
+        }
+
+        // Инициализация
+        setDefaultDates();
+        loadStats();
+
+        // Обновление каждые 5 минут
+        setInterval(loadStats, 5 * 60 * 1000);
+    </script>
+</body>
+</html>
